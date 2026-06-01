@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { Toaster } from "@/components/ui/sonner"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -40,17 +41,16 @@ export default function RootLayout({
                 <Link href="/about">About</Link>
               </Button>
               <Button asChild variant={"default"}>
-                <Link
-                  href="https://www.google.com/"
-                  target="_blank"
-                  rel="norefferer"
-                >
-                  Google
-                </Link>
+                <Link href="/posts">Posts</Link>
+              </Button>
+              <Button asChild variant={"default"}>
+                <Link href="/posts/create">Create Posts</Link>
               </Button>
             </nav>
           </header>
           {children}
+
+          <Toaster position="top-right" richColors />
         </ThemeProvider>
       </body>
     </html>
