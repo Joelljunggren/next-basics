@@ -2,10 +2,10 @@
 // This must run on the server because it touches the database
 
 import prisma from "@/lib/prisma"
-import { redirect } from "next/navigation"
 import { z } from "zod"
 
-const createPostSchema = z.object({
+const editPostSchema = z.object({
+  id: z.string().min(1), // Ensure we know which post should be updated
   title: z
     .string()
     // Reject empty titles so we don’t save incomplete posts
@@ -18,19 +18,20 @@ const createPostSchema = z.object({
     .max(5000, "Content cannot be lnger than 5000 characters"),
 })
 
-export async function createPost(values: z.infer<typeof createPostSchema>) {
+export async function editPost(values: z.infer<typeof editPostSchema>) {
   // Check that the incoming data has the expected shape and values.
   // If anything is missing or invalid, this will stop the function immediately.
-  const data = createPostSchema.parse(values)
-  console.log(data)
+  const data = editPostSchema.parse(values)
 
-  const newPost = await prisma.post.create({
+  // Find the existing post by its ID and update its fields in the database.
+  // This permanently changes the stored title and content.
+  const updatedPost = await prisma.post.update({
+    where: { id: data.id },
     data: {
-      // Explicit mapping avoids accidental mass assignment
       title: data.title,
       content: data.content,
     },
   })
-  //   redirect(`/posts/${newPost.id}`)
-  return newPost
+
+  return updatedPost
 }

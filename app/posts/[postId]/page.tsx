@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma"
 import { Edit } from "lucide-react"
 import { notFound } from "next/navigation"
 import { DeletePostButton } from "./_components/delete-post-button"
+import Link from "next/link"
 
 async function PostDetailsPage(props: PageProps<"/posts/[postId]">) {
   const params = await props.params
@@ -22,14 +23,15 @@ async function PostDetailsPage(props: PageProps<"/posts/[postId]">) {
       <h1 className="text-4xl font-bold">{post.title}</h1>
 
       <div className="flex gap-2">
-        <Button>
-          <Edit />
-          Edit
+        {/* Render the Button styles on the child element instead of creating a <button> */}
+        <Button variant="secondary" asChild>
+          <Link href={`/posts/${post.id}/edit`}>
+            <Edit />
+            Edit
+          </Link>
         </Button>
-        {/* <Button variant="destructive">
-          <Trash />
-          Delete
-        </Button> */}
+        {/* Provide a function that runs on the server so clicking the button
+            sends a request to delete the post in the database */}
         <DeletePostButton
           action={async () => {
             "use server"
