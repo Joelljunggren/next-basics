@@ -16,14 +16,22 @@ function DeletePostButton({ action }: Props) {
   const [isLoading, setIsLoading] = useState(false)
 
   async function handleClick() {
+    // Prevent accidental destructive actions by forcing explicit confirmation
     const shouldDelete = confirm("Are you sure you want to delete this post?")
-
     if (!shouldDelete) return
+
+    // Lock the UI to avoid duplicate delete requests
     setIsLoading(true)
+
+    // Deletion logic is injected so this button stays reusable
     await action()
+
+    // Restore interactivity once the operation completes
     setIsLoading(false)
     // toast.success(`Succesfully deleted post: "${}"`)
     toast.success("Successfully deleted post!")
+
+    // Replace instead of push so the deleted post isn't reachable via back button
     router.replace("/posts")
   }
 

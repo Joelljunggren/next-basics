@@ -14,6 +14,10 @@ import { createPost } from "../_actions/post-actions"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+/**
+ * Validation schema for the form.
+ * Ensures title and content are present and within length limits.
+ */
 const formSchema = z.object({
   title: z
     .string()
@@ -26,16 +30,20 @@ const formSchema = z.object({
 })
 
 function CreatePostForm() {
+  // Used for client-side navigation after successful post creation.
   const router = useRouter()
 
   const form = useForm({
+    // Initial form values when the component mounts.
     defaultValues: {
       title: "",
       content: "",
     },
+    // Validate submitted data using the Zod schema.
     validators: {
       onSubmit: formSchema,
     },
+    // Create a post and redirect after successful submission.
     onSubmit: async ({ value }) => {
       console.log(value)
       const newPost = await createPost(value)
@@ -52,13 +60,17 @@ function CreatePostForm() {
     <form
       method="POST"
       onSubmit={(ev) => {
+        // Prevent the browser's default form submission behavior.
         ev.preventDefault()
+        // Let TanStack Form handle validation and submission.
         form.handleSubmit(ev)
       }}
     >
       <FieldGroup>
         <form.Field name="title">
           {(field) => {
+            // Errors are gated behind user interaction to avoid noisy
+            // validation feedback on initial render
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid
             return (
@@ -70,9 +82,11 @@ function CreatePostForm() {
                   value={field.state.value}
                   onChange={(ev) => field.handleChange(ev.target.value)}
                   onBlur={field.handleBlur}
+                  // aria-invalid mirrors visual state for screen readers
                   aria-invalid={isInvalid}
                   placeholder="Add title"
                 />
+                {/* Defer validation feedback until the user interacts with the field*/}
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
             )
@@ -94,6 +108,7 @@ function CreatePostForm() {
                   aria-invalid={isInvalid}
                   placeholder="Add content"
                 />
+                {/* Display validation errors when field is invalid */}
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
             )
@@ -101,6 +116,7 @@ function CreatePostForm() {
         </form.Field>
 
         <Field orientation="horizontal">
+          {/* Keep submission controls separate from field validation logic */}
           <Button type="submit">Create Post</Button>
         </Field>
       </FieldGroup>

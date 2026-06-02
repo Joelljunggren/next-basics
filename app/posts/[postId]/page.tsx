@@ -6,11 +6,15 @@ import { DeletePostButton } from "./_components/delete-post-button"
 
 async function PostDetailsPage(props: PageProps<"/posts/[postId]">) {
   const params = await props.params
+
+  // Ensure a post ID exists.
   if (!params.postId) notFound()
 
+  // Look up the post.
   const post = await prisma.post.findUnique({
     where: { id: params.postId },
   })
+  // Show 404 if no matching post is found.
   if (!post) notFound()
 
   return (
