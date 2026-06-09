@@ -1,7 +1,9 @@
 "use server"
+import { auth } from "@/lib/auth"
 // This must run on the server because it touches the database
 
 import prisma from "@/lib/prisma"
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 
@@ -21,6 +23,12 @@ const createPostSchema = z.object({
 export async function createPost(values: z.infer<typeof createPostSchema>) {
   // Check that the incoming data has the expected shape and values.
   // If anything is missing or invalid, this will stop the function immediately.
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session) redirect("/sign-in")
+
   const data = createPostSchema.parse(values)
   console.log(data)
 
@@ -29,6 +37,7 @@ export async function createPost(values: z.infer<typeof createPostSchema>) {
       // Explicit mapping avoids accidental mass assignment
       title: data.title,
       content: data.content,
+      authorId: session.user.id,
     },
   })
   //   redirect(`/posts/${newPost.id}`)

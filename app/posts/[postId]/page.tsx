@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button"
 import prisma from "@/lib/prisma"
 import { Edit } from "lucide-react"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { DeletePostButton } from "./_components/delete-post-button"
 import Link from "next/link"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 
 async function PostDetailsPage(props: PageProps<"/posts/[postId]">) {
   const params = await props.params
@@ -11,9 +13,18 @@ async function PostDetailsPage(props: PageProps<"/posts/[postId]">) {
   // Ensure a post ID exists.
   if (!params.postId) notFound()
 
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
   // Look up the post.
   const post = await prisma.post.findUnique({
     where: { id: params.postId },
+    include: {
+      author: {
+        select: { name: true },
+      },
+    },
   })
   // Show 404 if no matching post is found.
   if (!post) notFound()
@@ -22,26 +33,36 @@ async function PostDetailsPage(props: PageProps<"/posts/[postId]">) {
     <div className="mx-auto max-w-prose space-y-4 p-4">
       <h1 className="text-4xl font-bold">{post.title}</h1>
 
-      <div className="flex gap-2">
-        {/* Render the Button styles on the child element instead of creating a <button> */}
-        <Button variant="secondary" asChild>
-          <Link href={`/posts/${post.id}/edit`}>
-            <Edit />
-            Edit
-          </Link>
-        </Button>
-        {/* Provide a function that runs on the server so clicking the button
+      {/* Conditionally renders the buttons based on if the session matches the author */}
+      {session && session.user.id === post.authorId && (
+        <div className="flex gap-2">
+          {/* Render the Button styles on the child element instead of creating a <button> */}
+          <Button variant="secondary" asChild>
+            <Link href={`/posts/${post.id}/edit`}>
+              <Edit />
+              Edit
+            </Link>
+          </Button>
+          {/* Provide a function that runs on the server so clicking the button
             sends a request to delete the post in the database */}
-        <DeletePostButton
-          action={async () => {
-            "use server"
+          <DeletePostButton
+            action={async () => {
+              "use server"
+              const session = await auth.api.getSession({
+                headers: await headers(),
+              })
+              if (!session) redirect("/sign-in")
 
-            await prisma.post.delete({ where: { id: post.id } })
-          }}
-        />
-      </div>
+              await prisma.post.delete({
+                where: { id: post.id, authorId: session.user.id },
+              })
+            }}
+          />
+        </div>
+      )}
 
       <div className="text-sm font-medium text-muted-foreground">
+        <p>Author: {post.author?.name ?? "Unknown author"}</p>
         <p>Created at: {post.createdAt.toLocaleDateString()}</p>
         <p>Updated at: {post.updatedAt.toLocaleDateString()}</p>
       </div>
