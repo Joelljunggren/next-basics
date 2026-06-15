@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { SignInForm } from "./_components/sign-in-form"
 
 export default async function SignInPage() {
   const session = await auth.api.getSession({
@@ -10,8 +11,10 @@ export default async function SignInPage() {
   if (session) redirect("/")
 
   return (
-    <div>
-      <h1>Sign in</h1>
+    <div className="mx-auto max-w-prose space-y-4 p-4">
+      <h1 className="text-4xl font-bold">Sign In</h1>
+
+      <SignInForm />
     </div>
   )
 }
